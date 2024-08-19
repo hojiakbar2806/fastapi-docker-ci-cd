@@ -44,8 +44,6 @@ jobs:
           file: Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fasapit-docker:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/fasapit-docker:cache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/fasapit-docker:cache,mode=max
 
       # - name: Deploy to AWS EC2
       #   env:
@@ -56,5 +54,5 @@ jobs:
       #     ssh -i $AWS_SSH_KEY ubuntu@$AWS_EC2_IP << 'EOF'
       #       cd /path/to/your/project
       #       docker-compose pull
-      #       docker-compose up -d --no-deps --build
+      #       docker-compose up -d
       #     EOF

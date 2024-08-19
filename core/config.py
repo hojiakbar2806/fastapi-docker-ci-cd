@@ -25,7 +25,7 @@ class DBSettings(BaseSettings):
         if (APP_ENV == "production"):
             return f"postgresql+asyncpg://{self.db_user}:{self.db_pass}@{self.db_host}:{self.db_port}/{self.db_name}"
         else:
-            return f"sqlite+aiosqlite:///{str(BASE_DIR/self.sql_db_name)}.sqlite"
+            return f"sqlite+aiosqlite:///{str(BASE_DIR/self.sql_db_name)}"
 
     class Config:
         env_file = BASE_DIR / ".env"

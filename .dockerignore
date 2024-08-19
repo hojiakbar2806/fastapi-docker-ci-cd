@@ -38,3 +38,7 @@ docker-compose.yml
 # Poetry
 poetry.lock
 pyproject.toml
+
+
+# Nginx
+nginx

@@ -37,5 +37,8 @@ poetry.lock
 pyproject.toml
 
 
-# postgres
+# database
 postgres_data
+test.sqlite
+
+nginx

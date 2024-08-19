@@ -1,0 +1,40 @@
+# Python specific
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.db
+*.sqlite3
+
+# Environment files
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Migrations
+alembic/
+migrations/
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# Pytest
+.cache/
+nosetests.xml
+*.cover
+
+# IDEs
+.vscode/
+.idea/
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# Poetry
+poetry.lock
+pyproject.toml

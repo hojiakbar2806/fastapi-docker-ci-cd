@@ -22,35 +22,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: |
-            /root/.cache/docker
-            /root/.cache/buildkit
-          key: ${{ runner.os }}-build-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build Docker image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
           file: Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/myapp:cache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/myapp:cache,mode=max
-
-      - name: Push Docker image to Docker Hub
-        run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:latest
 
       # - name: Deploy to AWS EC2
       #   env:

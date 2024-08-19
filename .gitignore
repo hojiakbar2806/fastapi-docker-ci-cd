@@ -31,9 +31,6 @@ nosetests.xml
 .vscode/
 .idea/
 
-# Docker
-Dockerfile
-docker-compose.yml
 
 # Poetry
 poetry.lock

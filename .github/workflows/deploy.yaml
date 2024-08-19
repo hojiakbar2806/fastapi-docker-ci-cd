@@ -34,8 +34,8 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:latest
-
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}fasapit-docker:tag 
+          
       # - name: Deploy to AWS EC2
       #   env:
       #     AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}

@@ -13,29 +13,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      # - name: Log in to Docker Hub
-      #     username: ${{ secrets.DOCKER_HUB_USERNAME }}
-      #     password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # - name: Build Docker Image
-      #   run: |
-      #     docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest .
-
-      # - name: Push Docker Image
-      #   run: |
-      #     docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}
-      # sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+      - name: Build and Push Docker Image
+        run: |
+          docker buildx build --platform linux/amd64 \
+            -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest \
+            --push .
 
       - name: Deploy to AWS EC2
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.3
         with:
           host: ${{ secrets.AWS_SSH_HOST }}
           username: ${{ secrets.AWS_SSH_USERNAME }}
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
             whoami
-            # cd ~/fastapi-docker
-            # sudo docker compose up -d --build
+            sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+            cd ~/fastapi-docker
+            sudo docker compose up -d --build

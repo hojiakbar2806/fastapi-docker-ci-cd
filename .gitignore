@@ -13,10 +13,6 @@ env/
 venv/
 ENV/
 
-# Migrations
-alembic/
-migrations/
-
 # Coverage
 .coverage
 coverage.xml

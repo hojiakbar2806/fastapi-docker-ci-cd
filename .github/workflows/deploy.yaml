@@ -56,12 +56,13 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fasapit-docker:latest
 
       - name: Run SSH command
-        uses: appleboy/ssh-action@v0.1.5
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.AWS_SSH_HOST }}
           username: ${{ secrets.AWS_SSH_USERNAME }}
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            cd /home/ubuntu/fastapi-docker-ci-cd
-            docker-compose pull
-            docker-compose up -d
+            whoami
+            # cd /home/ubuntu/fastapi-docker-ci-cd
+            # docker-compose pull
+            # docker-compose up -d

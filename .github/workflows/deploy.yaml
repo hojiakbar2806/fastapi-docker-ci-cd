@@ -34,26 +34,29 @@ jobs:
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
         continue-on-error: false
 
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/github_connection_rsa
+          chmod 600 ~/.ssh/github_connection_rsa
+
       - name: Deploy to Server
-        uses: appleboy/ssh-action@v0.1.4
-        with:
-          host: ${{ secrets.AWS_SSH_HOST }}
-          username: ${{ secrets.AWS_SSH_USERNAME }}
-          key: ${{ secrets.AWS_SSH_KEY }}
+        run: |
+          ssh -i ~/.ssh/github_connection_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }} <<EOF
+          set -e 
+          echo "Pulling the latest Docker image..."
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
 
-          script: |
-            set -e
-            echo "Pulling the latest Docker image..."
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+          echo "Stopping any existing container..."
+          docker stop ${{ secrets.CONTAINER_NAME }} || true
 
-            echo "Stopping any existing container..."
-            docker stop ${{ secrets.CONTAINER_NAME }} || true
+          echo "Removing any existing container..."
+          docker rm ${{ secrets.CONTAINER_NAME }} || true
 
-            echo "Removing any existing container..."
-            docker rm ${{ secrets.CONTAINER_NAME }} || true
+          echo "Running the new container..."
+          docker run -d --name ${{ secrets.CONTAINER_NAME }} -p 8000:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
 
-            echo "Running the new container..."
-            docker run -d --name ${{ secrets.CONTAINER_NAME }} -p 8000:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+          echo "Checking container status..."
+          docker ps -a
 
-            echo "Checking container status..."
-            docker ps -a
+        continue-on-error: false

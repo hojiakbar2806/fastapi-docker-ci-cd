@@ -22,9 +22,4 @@ app.include_router(v1_router)
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/health")
-async def health():
     return {"message": "OK"}

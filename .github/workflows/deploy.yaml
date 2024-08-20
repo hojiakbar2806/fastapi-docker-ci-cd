@@ -34,6 +34,7 @@ jobs:
           USERNAME: ${{ secrets.AWS_SSH_USERNAME }}
         run: |
           ssh -i "$PRIVATE_KEY" "$USERNAME@$HOST" << 'EOF'
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
-            docker-compose -f /home/ubuntu/fastapi-docker/docker-compose.yml up -d --build
+            cd ~/fastapi-docker
+            sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+            sudo docker compose up -d --build
           EOF

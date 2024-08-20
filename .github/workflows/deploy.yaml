@@ -47,7 +47,7 @@ jobs:
 
       - name: Test SSH Connection
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }} 'echo "SSH connection successful"'
+          ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }} 'echo "SSH connection successful"'
         continue-on-error: false
 
       - name: Deploy to Server

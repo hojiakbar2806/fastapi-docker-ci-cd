@@ -24,8 +24,13 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${{secrets.DOCKER_HUB_USERNAME}}/${{ secrets.DOCKER_HUB_IMAGE }}:latest .
-          docker push ${{secrets.DOCKER_HUB_USERNAME}}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+
+      - name: Add SSH Host Key to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.AWS_SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to AWS EC2
         env:
@@ -39,6 +44,5 @@ jobs:
             cd ~/fastapi-docker
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
             sudo docker compose up -d --build
-
-            rm -rf private_key.pem
+            rm -f private_key.pem
           EOF

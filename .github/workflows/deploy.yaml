@@ -34,15 +34,14 @@ jobs:
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
         continue-on-error: false
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
       - name: Deploy to Server
-        run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }} << 'EOF'
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.AWS_SSH_HOST }}
+          username: ${{ secrets.AWS_SSH_USERNAME }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+
+          script: |
             set -e
             echo "Pulling the latest Docker image..."
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
@@ -58,5 +57,3 @@ jobs:
 
             echo "Checking container status..."
             docker ps -a
-          EOF
-        continue-on-error: false

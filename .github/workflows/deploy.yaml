@@ -21,24 +21,24 @@ jobs:
 
       - name: Set up environment-specific .env file
         run: |
-          if [ "${{ env.APP_ENV }}" == "development" ]; then
-            echo "${{ secrets.ENV_FILE_CONTENT_DEV }}" > .env
-          elif [ "${{ env.APP_ENV }}" == "production" ]; then
-            echo "${{ secrets.ENV_FILE_CONTENT_PROD }}" > .env
+          if [[ ${{ env.APP_ENV }} == 'production' ]]; then
+            cp .env.production .env
+          else
+            cp .env.development .env
           fi
-
       - name: Log in to Docker Hub
-        run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+        run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
       - name: Set up Docker Buildx
         run: |
           docker buildx create --use
           docker buildx inspect --bootstrap
 
-      - name: Build and Push Docker Image
+      - name: Build, Push Docker Image, and Cache
         run: |
           docker buildx build \
             --cache-to type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
+            --cache-from type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
             --tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest \
             --push .
 
@@ -55,19 +55,9 @@ jobs:
             # Pull new Docker image
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
-            # Check if container exists
-            if sudo docker ps -a --format '{{.Names}}' | grep -q '^my_container$'; then
-              sudo docker stop my_container || true
-              sudo docker rm my_container || true
-            fi
+            # Stop and remove existing container if exists
+            sudo docker stop my_container || true
+            sudo docker rm my_container || true
 
             # Run Docker container
             sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
-
-      - name: Save Docker Build Cache
-        if: success() || failure()
-        run: |
-          docker buildx build \
-            --cache-to type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
-            --tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:cache \
-            --push .

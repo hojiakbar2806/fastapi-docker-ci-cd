@@ -4,27 +4,56 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - "**/*.md" # Markdown fayllar o'zgarishini e'tiborga olmaslik
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
 
+    env:
+      APP_ENV: development
+
     steps:
+      # 1. Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up .env file
-        run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+      # 2. Docker Image Caching
+      - name: Set up Docker Build Cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
+      # 3. Set up .env file
+      - name: Set up environment-specific .env file
+        run: |
+          if [ "${{ env.APP_ENV }}" == "development" ]; then
+            echo "${{ secrets.ENV_FILE_CONTENT_DEV }}" > .env
+          elif [ "${{ env.APP_ENV }}" == "production" ]; then
+            echo "${{ secrets.ENV_FILE_CONTENT_PROD }}" > .env
+          fi
+
+      # 4. Log in to Docker Hub
       - name: Log in to Docker Hub
         run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
+      # 5. Build Docker Image with caching
       - name: Build Docker Image
-        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest .
+        run: |
+          docker build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
+            -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest .
 
+      # 6. Push Docker Image
       - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
+      # 7. Deploy to AWS
       - name: Deploy to AWS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -35,12 +64,49 @@ jobs:
             mkdir -p ~/fastapi-docker
             cd ~/fastapi-docker
 
+            # Pull new Docker image
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
-            # Remove existing container if it exists
+            # Check if container exists
             if sudo docker ps -a --format '{{.Names}}' | grep -q '^my_container$'; then
               sudo docker stop my_container || true
               sudo docker rm my_container || true
             fi
 
-            sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
+            # Run Docker container
+            sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest || (
+              echo "Deploy failed, rolling back to previous version" &&
+              sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous &&
+              sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous
+            )
+
+      # 8. Save cache (optional)
+      - name: Save Docker Build Cache
+        if: success() || failure()
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache-new
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+
+  rollback:
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Rollback Docker Image
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/fastapi-docker
+            sudo docker stop my_container || true
+            sudo docker rm my_container || true
+            sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous
+            sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous

@@ -55,15 +55,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fasapit-docker:latest
 
-      - name: Upload .env file to AWS EC2
-        uses: appleboy/scp-action@v0.1.5
-        with:
-          host: ${{ secrets.AWS_EC2_IP }}
-          username: ubuntu
-          key: ${{ secrets.AWS_SSH_KEY }}
-          source: .env
-          target: /home/ubuntu/fastapi-docker-ci-cd/.env
-
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v0.1.5
         with:

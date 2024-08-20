@@ -35,13 +35,7 @@ jobs:
       #   continue-on-error: false
 
       - name: Deploy to Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.AWS_SSH_HOST }}
-          username: ${{ secrets.AWS_SSH_USERNAME }}
-          key: ${{ secrets.AWS_SSH_KEY }}
-
-          script: |
-            whoami
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.AWS_SSH_KEY }} ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }} "cd ~/fastapi-docker && docker compose pull && docker compose up -d --build"
 
         continue-on-error: false

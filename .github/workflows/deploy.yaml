@@ -42,10 +42,10 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
             echo "Stopping and removing old containers and networks..."
-            sudo docker-compose down
+            sudo docker compose down
 
             echo "Starting new containers with the latest image..."
-            sudo docker-compose up -d --build
+            sudo docker compose up -d --build
 
             echo "Listing running containers..."
             sudo docker ps

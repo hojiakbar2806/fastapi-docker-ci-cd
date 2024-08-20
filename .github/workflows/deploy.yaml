@@ -13,6 +13,7 @@ jobs:
 
     env:
       APP_ENV: development
+      DOCKER_BUILDKIT: 1 # Buildkit'ni yoqish
 
     steps:
       # 1. Checkout code
@@ -44,10 +45,11 @@ jobs:
       # 5. Build Docker Image with caching
       - name: Build Docker Image
         run: |
-          docker build \
+          docker buildx build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache-new \
-            -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest .
+            -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest \
+            --load .
 
       # 6. Push Docker Image
       - name: Push Docker Image
@@ -80,7 +82,7 @@ jobs:
               sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous
             )
 
-      # 8. Save cache (optional)
+      # 8. Save Docker Build Cache (optional)
       - name: Save Docker Build Cache
         if: success() || failure()
         uses: actions/cache@v3

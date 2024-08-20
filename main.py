@@ -22,4 +22,4 @@ app.include_router(v1_router)
 
 @app.get("/")
 async def root():
-    return {"message": "OK"}
+    return {"OK"}

@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p /home${{secrets.EC2_USER}}/fastapi-docker
+            sudo mkdir -p /home${{secrets.EC2_USER}}/fastapi-docker
 
             cd ~/fastapi-docker
 

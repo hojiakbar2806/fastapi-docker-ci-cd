@@ -36,6 +36,7 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.AWS_SSH_KEY }} ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }} "cd ~/fastapi-docker && docker compose pull && docker compose up -d --build"
+          mkdir .ssh && echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }} "cd ~/fastapi-docker && docker compose pull && docker compose up -d --build"
 
         continue-on-error: false

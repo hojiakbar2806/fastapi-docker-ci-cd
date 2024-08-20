@@ -35,11 +35,10 @@ jobs:
           docker buildx create --use
           docker buildx inspect --bootstrap
 
-      - name: Build Docker Image
+      - name: Build and Push Docker Image
         run: |
           docker buildx build \
             --cache-to type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
-            --cache-from type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
             --tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest \
             --push .
 
@@ -70,4 +69,5 @@ jobs:
         run: |
           docker buildx build \
             --cache-to type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
+            --tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:cache \
             --push .

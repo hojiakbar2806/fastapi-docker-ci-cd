@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths-ignore:
-      - "**/*.md" # Markdown fayllar o'zgarishini e'tiborga olmaslik
+      - "**/*.md"
 
 jobs:
   build_and_deploy:
@@ -13,23 +13,12 @@ jobs:
 
     env:
       APP_ENV: development
-      DOCKER_BUILDKIT: 1 # Buildkit'ni yoqish
+      DOCKER_BUILDKIT: 1
 
     steps:
-      # 1. Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Docker Image Caching
-      - name: Set up Docker Build Cache
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      # 3. Set up .env file
       - name: Set up environment-specific .env file
         run: |
           if [ "${{ env.APP_ENV }}" == "development" ]; then
@@ -38,24 +27,24 @@ jobs:
             echo "${{ secrets.ENV_FILE_CONTENT_PROD }}" > .env
           fi
 
-      # 4. Log in to Docker Hub
       - name: Log in to Docker Hub
         run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # 5. Build Docker Image with caching
+      - name: Set up Docker Buildx
+        run: |
+          docker buildx create --use
+          docker buildx inspect --bootstrap
+
       - name: Build Docker Image
         run: |
           docker buildx build \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
-            -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest \
-            --load .
+            --cache-to type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
+            --cache-from type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
+            --push -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest .
 
-      # 6. Push Docker Image
       - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
-      # 7. Deploy to AWS
       - name: Deploy to AWS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -82,13 +71,12 @@ jobs:
               sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous
             )
 
-      # 8. Save Docker Build Cache (optional)
       - name: Save Docker Build Cache
         if: success() || failure()
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache-new
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+        run: |
+          docker buildx build \
+            --cache-to type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
+            --push .
 
   rollback:
     runs-on: ubuntu-latest

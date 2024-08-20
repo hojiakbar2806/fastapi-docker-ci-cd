@@ -49,7 +49,7 @@ jobs:
 
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
-            sudo docker stop my_container || true
-            sudo docker rm my_container || true
+            sudo docker stop fastapi || true
+            sudo docker rm fastapi || true
 
-            sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
+            sudo docker run -d --name fastapi --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest

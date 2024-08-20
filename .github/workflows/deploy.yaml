@@ -32,12 +32,15 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sudo mkdir -p /home${{secrets.EC2_USER}}/fastapi-docker
-
+            mkdir -p ~/fastapi-docker
             cd ~/fastapi-docker
 
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
-            echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+            # Remove existing container if it exists
+            if sudo docker ps -a --format '{{.Names}}' | grep -q '^my_container$'; then
+              sudo docker stop my_container || true
+              sudo docker rm my_container || true
+            fi
 
             sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest

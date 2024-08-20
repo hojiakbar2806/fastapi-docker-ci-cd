@@ -55,14 +55,13 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fasapit-docker:latest
 
-      - name: Deploy to AWS EC2
+      - name: Deploy to EC2 via SSH Action
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.AWS_EC2_IP }}
-          key: ${{ secrets.AWS_SSH_KEY }}
           username: ubuntu
+          key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            echo "Connected successfully"
-            cd /path/to/your/project
+            cd /home/ubuntu/fastapi-docker-ci-cd
             docker-compose pull
             docker-compose up -d

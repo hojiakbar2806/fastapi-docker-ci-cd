@@ -1,4 +1,4 @@
-name: Build and Deploy to AWS
+name: Test SSH Connection
 
 on:
   push:
@@ -6,40 +6,24 @@ on:
       - main
 
 jobs:
-  build_and_deploy:
+  test-ssh-connection:
     runs-on: ubuntu-latest
 
     steps:
-      # - name: Checkout code
-      #   uses: actions/checkout@v3
-      #   with:
-      #     fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v2
-
-      # - name: Log in to Docker Hub
-      #   uses: docker/login-action@v2
-      #   with:
-      #     username: ${{ secrets.DOCKER_HUB_USERNAME }}
-      #     password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      # - name: Build Docker Image
-      #   run: |
-      #     docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest .
-      #   continue-on-error: false
-
-      # - name: Push Docker Image
-      #   run: |
-      #     docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
-      #   continue-on-error: false
-
-      - name: Setup SSH Key
+      - name: Set up SSH key
+        env:
+          SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "${SSH_KEY}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-      - name: Deploy to Server
+
+      - name: Test SSH connection
+        env:
+          SERVER_IP: ${{ secrets.AWS_SSH_HOST }}
+          SERVER_USER: ${{ secrets.AWS_SSH_USERNAME }}
         run: |
-          ssh-keygen -y -f ~/.ssh/id_rsa
-          # ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }}
+          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_IP} "echo 'SSH connection successful'"

@@ -22,27 +22,21 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build and Push Docker Image
+      - name: Build Docker Image
         run: |
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
 
-      - name: Add SSH Host Key to known_hosts
+      - name: Push Docker Image
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.AWS_SSH_HOST }} >> ~/.ssh/known_hosts
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}
 
       - name: Deploy to AWS EC2
-        env:
-          PRIVATE_KEY: ${{ secrets.AWS_SSH_KEY }}
-          HOST: ${{ secrets.AWS_SSH_HOST }}
-          USERNAME: ${{ secrets.AWS_SSH_USERNAME }}
-        run: |
-          echo "$PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
-          ssh -i "private_key.pem" "$USERNAME@$HOST" << 'EOF'
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.AWS_SSH_HOST }}
+          username: ${{ secrets.AWS_SSH_USERNAME }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          script: |
             cd ~/fastapi-docker
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
             sudo docker compose up -d --build
-            rm -f private_key.pem
-          EOF

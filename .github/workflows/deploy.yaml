@@ -41,12 +41,13 @@ jobs:
             echo "Pulling the latest Docker image..."
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
-            echo "Stopping and removing old container if exists..."
-            sudo docker stop fastapi || true
-            sudo docker rm fastapi || true
+            echo "Stopping and removing old containers and networks..."
+            sudo docker-compose down
 
-            echo "Running new container..."
-            sudo docker run -d --name fastapi --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
+            echo "Starting new containers with the latest image..."
+            sudo docker-compose up -d --build
 
             echo "Listing running containers..."
             sudo docker ps
+
+            echo "Deployed successfully!"

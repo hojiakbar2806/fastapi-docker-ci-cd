@@ -1,28 +1,25 @@
-networks:
-  dev:
+version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-    env_file:
-      - .env
-    container_name: fastapi_app
+    image: kojiakbar2806/fastapi_app:latest  # Docker Hub-dan imidj
+    container_name: fastapi
     ports:
-      - "8000:8000"
+      - "8000:8000"  # Hostdagi port:Container port
+    env_file:
+      - .env  # Muhit o'zgaruvchilari
     volumes:
-      - .:/app
-    restart: always
+      - .:/app  # Loyiha papkasini konteynerga ulash
+    restart: always  # Konteynerni qayta ishga tushirish qoidalari
     depends_on:
       - db
       - redis
     command: >
       bash -c "alembic upgrade head && gunicorn main:app --workers=4 --worker-class=uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000"
 
-
   db:
-    image: postgres:latest
-    container_name: postgres_app
+    image: postgres:latest  # Postgres imidji
+    container_name: postgres
     ports:
       - "${DB_PORT}:5432"
     environment:
@@ -34,8 +31,8 @@ services:
       - ./postgres_data:/var/lib/postgresql/data
 
   redis:
-    image: redis:latest
-    container_name: redis_app
+    image: redis:latest  # Redis imidji
+    container_name: redis
     ports:
       - "${REDIS_PORT}:6379"
     restart: always

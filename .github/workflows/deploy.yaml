@@ -34,12 +34,8 @@ jobs:
       #     docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
       #   continue-on-error: false
 
-      - name: Deploy to Server
+      - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }}
-          echo "================"
-          echo "Successfully connected"
-          echo "================"

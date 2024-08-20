@@ -20,12 +20,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up environment-specific .env file
-        run: |
-          if [[ ${{ env.APP_ENV }} == 'production' ]]; then
-            cp .env.production .env
-          else
-            cp .env.development .env
-          fi
+        run: echo "${{ secrets.ENV_FILE }}" > .env
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
@@ -49,15 +44,12 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p ~/fastapi-docker
+            sudo mkdir -p ~/fastapi-docker
             cd ~/fastapi-docker
 
-            # Pull new Docker image
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
-            # Stop and remove existing container if exists
             sudo docker stop my_container || true
             sudo docker rm my_container || true
 
-            # Run Docker container
             sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest

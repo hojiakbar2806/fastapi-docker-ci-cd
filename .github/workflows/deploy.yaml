@@ -33,8 +33,12 @@ jobs:
           HOST: ${{ secrets.AWS_SSH_HOST }}
           USERNAME: ${{ secrets.AWS_SSH_USERNAME }}
         run: |
-          ssh -i "$PRIVATE_KEY" "$USERNAME@$HOST" << 'EOF'
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -i "private_key.pem" "$USERNAME@$HOST" << 'EOF'
             cd ~/fastapi-docker
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
             sudo docker compose up -d --build
+
+            rm -rf private_key.pem
           EOF

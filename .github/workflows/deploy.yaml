@@ -7,23 +7,16 @@ on:
 
 jobs:
   test-ssh-connection:
+    name: Test SSH Connection
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.AWS_SSH_KEY }}
 
-      - name: Set up SSH key
-        env:
-          SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      - name: SSH into Server and Deploy
         run: |
-          mkdir -p ~/.ssh
-          echo "${SSH_KEY}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-      - name: Test SSH connection
-        env:
-          SERVER_IP: ${{ secrets.AWS_SSH_HOST }}
-          SERVER_USER: ${{ secrets.AWS_SSH_USERNAME }}
-        run: |
-          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_IP} "echo 'SSH connection successful'"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USERNAME }}@${{ secrets.AWS_SSH_HOST }} \
+          "echo 'connected'"

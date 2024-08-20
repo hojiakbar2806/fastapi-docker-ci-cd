@@ -35,7 +35,7 @@ jobs:
         continue-on-error: false
 
       - name: Deploy to AWS
-        uses: appleboy/ssh-action@v0.0.3
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
@@ -43,3 +43,4 @@ jobs:
           script: |
             cd ~/fastapi-docker
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
+            docker-compose up -d

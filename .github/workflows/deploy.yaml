@@ -16,6 +16,9 @@ jobs:
       - name: Set up .env file
         run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
 
+      - name: Log in to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
       - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest .
 
@@ -29,7 +32,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p ~/fastapi-docker
+            mkdir -p /home${{secrets.EC2_USER}}/fastapi-docker
 
             cd ~/fastapi-docker
 

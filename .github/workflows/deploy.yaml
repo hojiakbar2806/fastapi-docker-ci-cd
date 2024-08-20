@@ -40,10 +40,8 @@ jobs:
           docker buildx build \
             --cache-to type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
             --cache-from type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
-            --push -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest .
-
-      - name: Push Docker Image
-        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
+            --tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest \
+            --push .
 
       - name: Deploy to AWS
         uses: appleboy/ssh-action@v1.0.3
@@ -65,11 +63,7 @@ jobs:
             fi
 
             # Run Docker container
-            sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest || (
-              echo "Deploy failed, rolling back to previous version" &&
-              sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous &&
-              sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous
-            )
+            sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
       - name: Save Docker Build Cache
         if: success() || failure()
@@ -77,26 +71,3 @@ jobs:
           docker buildx build \
             --cache-to type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}-cache \
             --push .
-
-  rollback:
-    runs-on: ubuntu-latest
-    if: failure()
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Log in to Docker Hub
-        run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Rollback Docker Image
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ~/fastapi-docker
-            sudo docker stop my_container || true
-            sudo docker rm my_container || true
-            sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous
-            sudo docker run -d --name my_container --env-file .env ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:previous

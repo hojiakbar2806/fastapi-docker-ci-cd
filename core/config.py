@@ -62,3 +62,5 @@ class Settings(DBSettings):
 
 
 settings = Settings()
+
+print(settings.db.db_url)

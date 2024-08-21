@@ -1,5 +1,5 @@
 # Python 3.12 imajidan foydalanamiz
-FROM python:3.12-slim
+FROM python:3.12
 
 # Muhit o'zgaruvchilarini sozlash
 ENV PYTHONUNBUFFERED=1
@@ -20,4 +20,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Gunicorn serverini ishga tushiramiz
-CMD ["gunicorn", "main:app", "--workers=4", "--worker-class=uvicorn.workers.UvicornWorker"]
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "main:app"]

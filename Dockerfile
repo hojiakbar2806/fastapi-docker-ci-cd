@@ -19,8 +19,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Manba fayllarini nusxalaymiz
 COPY . .
 
-# Alembic migratsiyalarini bajarish
-RUN alembic upgrade head
-
 # Gunicorn serverini ishga tushiramiz
 CMD ["gunicorn", "main:app", "--workers=4", "--worker-class=uvicorn.workers.UvicornWorker"]

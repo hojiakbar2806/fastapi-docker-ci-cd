@@ -45,6 +45,7 @@ jobs:
           script: |
             set -e
             set -x
+
             echo "Pulling the latest Docker image..."
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
@@ -52,12 +53,12 @@ jobs:
             cd ~/fastapi-docker
             git pull origin main
 
-            echo "Stopping and removing old container if exists..."
-            sudo docker stop fastapi || true
-            sudo docker rm fastapi || true
+            echo "Stopping and removing the old fastapi container if exists..."
+            sudo docker compose stop fastapi
+            sudo docker compose rm -f fastapi
 
-            echo "Running new container..."
-            sudo docker run -d --name fastapi --env-file .env --restart always ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
+            echo "Running the new fastapi container..."
+            sudo docker compose up -d --no-deps --build fastapi
 
             echo "Listing running containers..."
             sudo docker ps

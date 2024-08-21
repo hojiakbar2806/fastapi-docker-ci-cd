@@ -1,6 +1,6 @@
 services:
   app:
-    image: hojiakbar2806/fasapit-docker:latest
+    image: hojiakbar2806/fastapi_app:latest
     container_name: fastapi
     ports:
       - "8000:8000" 

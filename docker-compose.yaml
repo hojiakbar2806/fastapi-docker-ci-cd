@@ -1,25 +1,29 @@
+version: '3.8'
+
 services:
-  app:
+  fastapi:
     image: hojiakbar2806/fastapi_app:latest
     container_name: fastapi
     ports:
-      - "8000:8000" 
+      - "8000:8000"
     env_file:
-      - .env 
+      - .env
     volumes:
-      - .:/app 
-    restart: always 
+      - .:/app
+    restart: always
     depends_on:
       - db
       - redis
     command: >
       bash -c "alembic upgrade head && gunicorn main:app --workers=4 --worker-class=uvicorn.workers.UvicornWorker"
+    networks:
+      - webnet
 
   db:
     image: postgres:latest
     container_name: postgres
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
@@ -32,7 +36,7 @@ services:
     image: redis:latest
     container_name: redis
     ports:
-      - "${REDIS_PORT}:6379"
+      - "6379:6379"
     restart: always
 
   nginx:
@@ -43,7 +47,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - app
+      - fastapi
     restart: always
     networks:
       - webnet

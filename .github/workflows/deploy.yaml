@@ -39,8 +39,6 @@ jobs:
 
             git pull origin main
 
-            sudo docker compose rm -f fastapi
+            sudo docker compose restart fastapi
             
-            sudo docker compose up --no-depth fastapi
-
             sudo docker image prune -f

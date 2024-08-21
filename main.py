@@ -62,7 +62,7 @@ async def post_multiple_users(count: int, session: AsyncSession = Depends(get_as
         user = User(
             first_name=first_name,
             last_name=last_name,
-            phone_number=phone_number,
+            phone_number=str(phone_number),
             username=username,
             hashed_password=hashed_password
         )

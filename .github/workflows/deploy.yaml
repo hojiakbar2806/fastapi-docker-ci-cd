@@ -14,9 +14,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up environment-specific .env file
-        run: echo "${{ secrets.ENV_FILE }}" > .env
-
       - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest .
 
@@ -35,6 +32,7 @@ jobs:
           script: |-
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
             cd ~/fastapi-docker
+            echo "${{ secrets.ENV_FILE }}" | sed 's/ /\n/g' > .env
             git pull origin main
             sudo docker compose rm -f fastapi
             sudo docker compose up -d --no-deps fastapi

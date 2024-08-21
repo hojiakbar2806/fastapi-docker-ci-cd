@@ -1,5 +1,8 @@
+import asyncio
 from faker import Faker
 from urllib.parse import unquote
+
+from sqlalchemy import insert
 from api.v1.router import v1_router
 from fastapi import Depends, FastAPI
 from fastapi.responses import FileResponse
@@ -47,29 +50,24 @@ async def read_media(path: str):
 fake = Faker()
 
 
+async def create_user(index: int) -> dict:
+    return {
+        "first_name": fake.first_name(),
+        "last_name": fake.last_name(),
+        "phone_number": str(fake.random_number(digits=13, fix_len=True)),
+        "username": fake.user_name(),
+        "hashed_password": hash_password(fake.password())
+    }
+
+
 @app.post("/users_post")
 async def post_multiple_users(count: int, session: AsyncSession = Depends(get_async_session)):
-    users = []
-    for _ in range(count):
-        first_name = fake.first_name()
-        last_name = fake.last_name()
-        phone_number = fake.random_number(digits=13, fix_len=True)
-        username = fake.user_name()
-        password = fake.password()
+    tasks = [create_user(i) for i in range(count)]
+    users = await asyncio.gather(*tasks)
 
-        hashed_password = hash_password(password)  # password should be hashed
-
-        user = User(
-            first_name=first_name,
-            last_name=last_name,
-            phone_number=str(phone_number),
-            username=username,
-            hashed_password=hashed_password
-        )
-
-        users.append(user)
-
-    session.add_all(users)
+    # Bulk insert mappings
+    stmt = insert(User).values(users)
+    await session.execute(stmt)
     await session.commit()
 
     return {"message": f"{count} users created successfully"}

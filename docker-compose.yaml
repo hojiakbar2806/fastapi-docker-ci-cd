@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   app:
     image: hojiakbar2806/fasapit-docker:latest
@@ -13,24 +15,41 @@ services:
       - db
       - redis
     command: >
-      bash -c "alembic upgrade head && gunicorn main:app --workers=4 --worker-class=uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000"
+      bash -c "alembic upgrade head && gunicorn main:app --workers=4 --worker-class=uvicorn.workers.UvicornWorker"
 
   db:
-    image: postgres:latest  
+    image: postgres:latest
     container_name: postgres
     ports:
       - "${DB_PORT}:5432"
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - POSTGRES_DB=${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
     restart: always
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
 
   redis:
-    image: redis:latest  
+    image: redis:latest
     container_name: redis
     ports:
       - "${REDIS_PORT}:6379"
     restart: always
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+    restart: always
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge

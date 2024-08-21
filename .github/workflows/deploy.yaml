@@ -17,14 +17,6 @@ jobs:
       - name: Set up environment-specific .env file
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/docker
-          key: ${{ runner.os }}-docker-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-docker-
-
       - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest .
 
@@ -42,17 +34,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |-
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
-
             cd ~/fastapi-docker
-
             git pull origin main
-
-            sudo docker compose stop fastapi
-            
             sudo docker compose rm -f fastapi
-
-            sudo docker compose up -d --no-deps --build fastapi
-
-            sudo docker ps
-
+            sudo docker compose up -d --no-deps fastapi
             sudo docker image prune -f

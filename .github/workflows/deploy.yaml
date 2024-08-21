@@ -47,13 +47,12 @@ jobs:
 
             git pull origin main
 
-            sudo docker compose up -d --build
+            sudo docker compose stop fastapi
+            
+            sudo docker compose rm -f fastapi
 
-            # sudo docker compose stop fastapi
-            # sudo docker compose rm -f fastapi
+            sudo docker compose up -d --no-deps --build fastapi
 
-            # sudo docker compose up -d --no-deps --build fastapi
+            sudo docker ps
 
-            # sudo docker ps
-
-            # sudo docker image prune -f
+            sudo docker image prune -f

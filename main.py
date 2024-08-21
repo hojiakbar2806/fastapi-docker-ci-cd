@@ -5,7 +5,7 @@ from database.session import create_tables
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan():
     await create_tables()
     yield
 
@@ -22,4 +22,4 @@ app.include_router(v1_router)
 
 @app.get("/")
 async def root():
-    return {"OK4"}
+    return {"Success"}

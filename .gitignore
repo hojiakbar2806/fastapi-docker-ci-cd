@@ -37,4 +37,5 @@ pyproject.toml
 postgres_data
 test.sqlite
 
-nginx
+
+.DS_Store

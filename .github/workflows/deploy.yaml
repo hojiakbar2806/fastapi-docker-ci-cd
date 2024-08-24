@@ -39,7 +39,7 @@ jobs:
           file: ./Dockerfile
           builder: ${{steps.buildx.outputs.name}}
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
+          tags: ${{ secrets.CONTAINER_NAME }}:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
@@ -55,8 +55,9 @@ jobs:
           script: |-
             cd ~/fastapi-docker
             echo "${{ secrets.ENV_FILE }}" | tr ' ' '\n' > .env
-            git pull
-            sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
+            git pull origin main  
+            sudo docker pull ${{ secrets.CONTAINER_NAME }}:latest
             sudo docker compose restart fastapi
             sudo docker image prune -f
             sudo docker container prune -f
+            sudo docker ps

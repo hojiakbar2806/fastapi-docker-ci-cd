@@ -23,7 +23,7 @@ async def register_user(
 ):
     user.hashed_password = hash_password(user.hashed_password)
     new_user = User(**user.dict())
-    
+
     session.add(new_user)
     await session.commit()
     await session.refresh(new_user)

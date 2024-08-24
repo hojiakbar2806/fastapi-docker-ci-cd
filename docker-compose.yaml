@@ -1,6 +1,6 @@
 services:
   fastapi:
-    image: hojiakbar2806/fastapi_app:latest
+    image: fastapi_app:latest
     container_name: fastapi
     command: /bin/sh -c "alembic upgrade head && gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 main:app"
     ports:

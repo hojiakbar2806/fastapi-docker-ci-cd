@@ -12,57 +12,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code from the repository
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Log in to Docker Hub
       - name: Docker Hub Login
         run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-      # Step 3: Build the Docker image with caching
       - name: Build Docker Image
         run: |
           docker build \
             --cache-from ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest \
             --tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest .
 
-      # Step 4: Push the Docker image to Docker Hub
       - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
-      # Step 5: Verify the Docker image
       - name: Verify Docker Image
         run: docker inspect ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest --format '{{.Id}}'
 
-      # Step 6: Deploy to AWS
       - name: Deploy to AWS
         run: |
-          # Create and set permissions for SSH key
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/ssh_key
           chmod 600 ~/ssh_key
 
-          # SSH into the EC2 instance and execute deployment commands
           ssh -o StrictHostKeyChecking=no -i "~/ssh_key" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            # Change directory to project folder
             cd ~/fastapi-docker
 
-            # Update environment file
             echo "${{ secrets.ENV_FILE }}" | tr ' ' '\n' > .env
 
-            # Pull the latest code
             git pull origin main
 
-            # Pull the latest Docker image
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.CONTAINER_NAME }}:latest
 
-            # Restart the FastAPI service
             sudo docker compose restart fastapi
 
-            # Clean up unused images and containers
             sudo docker image prune -f
             sudo docker container prune -f
-
-            # List running containers
             sudo docker ps
           EOF
